@@ -8,3 +8,4 @@ __pycache__/
 *.log
 /build/
 /dist/
+database_connect.ipynb
