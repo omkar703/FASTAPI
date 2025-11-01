@@ -10,3 +10,6 @@ sqlmodel
 pydantic-settings
 sqlalchemy[asyncio]
 sqlmodel[asyncio]
+alembic
+passlib
+pyjwt
