@@ -13,3 +13,4 @@ sqlmodel[asyncio]
 alembic
 passlib
 pyjwt
+redis
