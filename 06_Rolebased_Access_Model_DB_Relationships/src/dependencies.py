@@ -1,7 +1,14 @@
+from re import A
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from fastapi import HTTPException, Request
+from fastapi import HTTPException, Request , Depends
 from src.auth.utils import decode_token
 from src.db.redis import token_in_blocklist
+from src.db.main import get_session
+from sqlmodel.ext.asyncio.session import AsyncSession
+from src.auth.service import UserService
+from typing import Any, List
+from .auth.models import User
+
 
 class TokenBearer(HTTPBearer):
     # when it get call then the init it check header and pass 403/401 
@@ -40,6 +47,9 @@ class TokenBearer(HTTPBearer):
         
     def verify_token_data(self, token_data : dict) -> None:
         raise NotImplementedError("This method should be implemented in subclasses") 
+    
+
+
         
         
 
@@ -57,3 +67,23 @@ class RefreshTokenBearer(TokenBearer):
             raise HTTPException(status_code=401, detail="Invalid token")
         if not token_data['refresh']:
             raise HTTPException(status_code=401, detail="Please provide refresh token")
+
+
+
+async def get_current_user(token_details : dict = Depends(AccessTokenBearer()) ,
+                     session: AsyncSession = Depends(get_session)):
+    user_email = token_details["user"]["email"]
+
+    user = await UserService().get_user_by_email(email=user_email , session=session)
+
+    return user
+
+
+
+class RoleChecker:
+    def __init__(self, allowed_roles : List[str]) -> None:
+        self.allowed_roles = allowed_roles
+
+    def __call__(self, Current_User: User = Depends(get_current_user)) -> Any:
+        if Current_User.role not in self.allowed_roles:
+            raise HTTPException(status_code=403, detail="Operation not permited")

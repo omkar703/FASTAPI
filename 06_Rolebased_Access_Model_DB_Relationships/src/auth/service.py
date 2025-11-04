@@ -1,12 +1,13 @@
 from .models import User
 from sqlmodel.ext.asyncio.session import AsyncSession
 from sqlmodel import select
+from sqlalchemy.orm import selectinload
 from .schemas import UserCreateModel
 from .utils import generate_password_hash , verify_password
 
 class UserService:
     async def get_user_by_email(self , email : str , session : AsyncSession):
-        statement = select(User).where(User.email == email)
+        statement = select(User).where(User.email == email).options(selectinload(User.books))
 
         result = await session.exec(statement)
 
@@ -22,6 +23,8 @@ class UserService:
         # convert the data into dict 
         user_data_dict = user_data.model_dump()
         user_data_dict['password_hash'] = generate_password_hash(user_data.password)
+
+        user_data_dict['role'] = 'user'
 
         user = User(**user_data_dict)
         session.add(user)

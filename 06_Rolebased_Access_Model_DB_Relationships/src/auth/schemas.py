@@ -1,6 +1,8 @@
 from pydantic import BaseModel , Field
 import uuid
 from datetime import datetime
+from typing import List 
+from src.books.schemas import Book
 
 class UserCreateModel(BaseModel):
     first_name : str = Field(max_length=50)
@@ -11,6 +13,8 @@ class UserCreateModel(BaseModel):
 
 
 class UserModel(BaseModel):
+    model_config = {"from_attributes": True}
+    
     uid : uuid.UUID 
     username: str 
     email: str 
@@ -20,6 +24,7 @@ class UserModel(BaseModel):
     is_verified: bool 
     created_at: datetime 
     updated_at: datetime 
+    books : List[Book]
 
 
 class UserLoginModel(BaseModel):

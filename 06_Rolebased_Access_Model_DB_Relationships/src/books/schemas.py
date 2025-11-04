@@ -4,6 +4,8 @@ import uuid
 from datetime import datetime
 
 class Book(BaseModel):
+    model_config = {"from_attributes": True}
+    
     uid: uuid.UUID
     title: str
     author: str

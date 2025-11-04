@@ -19,7 +19,7 @@ app = FastAPI(
     version=version,
     title="Book Management API",
     description="A simple API to manage books using FastAPI",
-    lifespan=lifespan
+   # lifespan=lifespan
 
 )
 

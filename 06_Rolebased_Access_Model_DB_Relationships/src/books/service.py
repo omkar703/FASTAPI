@@ -9,6 +9,12 @@ class BookService:
         results = await session.exec(statement)
         books = results.all()
         return books
+    
+    async def get_user_books(self, user_id : str ,session : AsyncSession):
+        statement = select(Book).where(Book.user_uid == user_id).order_by(desc(Book.created_at))
+        results = await session.exec(statement)
+        books = results.all()
+        return books
 
     async def get_book_by_id(self, book_id : str, session : AsyncSession):
         statement = select(Book).where(Book.uid == book_id)
@@ -16,8 +22,9 @@ class BookService:
         book = results.first()
         return book
 
-    async def create_book(self, book_data : CreateBookModel, session : AsyncSession):
+    async def create_book(self, book_data : CreateBookModel, user_uid : str ,session : AsyncSession):
         new_book =  Book.model_validate(book_data)
+        new_book.user_uid = user_uid
         session.add(new_book)
         await session.commit()
         return new_book
@@ -44,3 +51,5 @@ class BookService:
         await session.delete(book_to_delete)
         await session.commit()  
         return {"message": f"Book with id {book_id} deleted successfully"}
+
+

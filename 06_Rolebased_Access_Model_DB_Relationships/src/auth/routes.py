@@ -7,12 +7,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from .utils import create_access_token , decode_token
 from datetime import timedelta  , datetime   
 from fastapi.responses import JSONResponse
-from src.dependencies import RefreshTokenBearer , AccessTokenBearer
+from src.dependencies import RefreshTokenBearer , AccessTokenBearer , get_current_user , RoleChecker
 from src.db.redis import add_jti_to_blocklist
 
 auth_router = APIRouter()
 
 user_service = UserService()
+
+RoleChecker = RoleChecker(["admin" , "user"])
 
 REFRESH_TOKEN_EXPIRY = timedelta(days=2)
 
@@ -43,7 +45,8 @@ async def login_user(user_login_data : UserLoginModel,
 
      if user is not None:
           if verify_password(password, user.password_hash):
-               access_token = create_access_token(user_data={"uid": str(user.uid), "email": user.email})
+               access_token = create_access_token(user_data={"uid": str(user.uid), "email": user.email ,
+                                                             "role" : user.role})
                
 
                refresh_token = create_access_token(user_data={"uid": str(user.uid), "email": user.email}, refresh=True , expiry=REFRESH_TOKEN_EXPIRY)
@@ -86,6 +89,7 @@ async def get_new_access_token(token_details : dict = Depends(RefreshTokenBearer
   }
 }
 '''
+
     expiry_timestamp = token_details['exp']
     if datetime.fromtimestamp(expiry_timestamp) > datetime.now():
          new_access_token = create_access_token(user_data=token_details['user'])
@@ -94,6 +98,12 @@ async def get_new_access_token(token_details : dict = Depends(RefreshTokenBearer
      # return JSONResponse(content={"message": "Token expired"}, status_code=status.HTTP_401_UNAUTHORIZED)
     else:
         return JSONResponse(content={"message": "Token expired"}, status_code=status.HTTP_401_UNAUTHORIZED)
+
+@auth_router.get('/me' , response_model=UserModel)
+# here it go first in the get_current_user convert the token into usermodels and then pass it to the user 
+async def get_user_details(user   : UserModel =  Depends(get_current_user) , _:bool = Depends(RoleChecker) ):
+     return user
+
 
 
 @auth_router.get('/logout')
