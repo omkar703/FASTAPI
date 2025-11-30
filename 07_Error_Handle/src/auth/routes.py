@@ -9,6 +9,7 @@ from datetime import timedelta  , datetime
 from fastapi.responses import JSONResponse
 from src.dependencies import RefreshTokenBearer , AccessTokenBearer , get_current_user , RoleChecker
 from src.db.redis import add_jti_to_blocklist
+from src.error import UserAlreadyExists
 
 auth_router = APIRouter()
 
@@ -27,10 +28,7 @@ async def create_user_account(user_data : UserCreateModel ,
      user_exists = await user_service.user_exists(email=email , session=session)
 
      if user_exists:
-          raise HTTPException(
-               status_code=status.HTTP_403_FORBIDDEN,
-               detail="User with this email already exists"
-          )
+          UserAlreadyExists()
      
      return await user_service.create_user(user_data=user_data, session=session)
 
